@@ -1,0 +1,59 @@
+// schema.prisma
+
+datasource db {
+  provider = "postgresql" // ou mysql / sqlite
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum TransactionChannel {
+  ALL
+  MOBILE_MONEY
+  CREDIT_CARD
+  WALLET
+}
+
+enum TransactionStatus {
+  REFUSED
+  ACCEPTED
+  PENDING
+}
+
+enum TransactionMessage {
+  SUCCES
+  CREATED
+  PAYMENT_FAILED
+  INSUFFICIENT_BALANCE
+  WAITING_CUSTOMER_PAYMENT
+  TRANSACTION_CANCEL
+}
+
+// Utilisateurs admin
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // hashé avec bcrypt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Transactions liées à CinetPay
+model Transaction {
+  id             String   @id @default(cuid())
+  clientName     String?
+  amount         Int
+  currency       String
+  status         TransactionStatus
+  code           String
+  message        String
+  channels       TransactionChannel
+  country        String
+  paymentMethod  String
+  paymentUrl     String?  // url de redirection CinetPay
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
