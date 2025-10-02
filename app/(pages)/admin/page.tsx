@@ -174,20 +174,20 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-orange-600">
+      <h1 className="text-3xl font-bold mb-8 text-primary">
         Tableau de bord
       </h1>
       <Tabs defaultValue="transactions" className="w-full">
         <TabsList className="flex justify-start gap-2 bg-orange-50 rounded-lg p-1 mb-8">
           <TabsTrigger
             value="transactions"
-            className="data-[state=active]:bg-orange-500 data-[state=active]:text-white text-orange-600 px-10 py-5 rounded-lg font-semibold transition-all cursor-pointer"
+            className="data-[state=active]:bg-primary data-[state=active]:text-white text-primary px-10 py-5 rounded-lg font-semibold transition-all cursor-pointer"
           >
             Transactions
           </TabsTrigger>
           <TabsTrigger
             value="stats"
-            className="data-[state=active]:bg-orange-500 data-[state=active]:text-white text-orange-600 px-10 py-5 rounded-lg font-semibold transition-all cursor-pointer"
+            className="data-[state=active]:bg-primary data-[state=active]:text-white text-primary px-10 py-5 rounded-lg font-semibold transition-all cursor-pointer"
           >
             Statistiques par pays
           </TabsTrigger>
@@ -201,12 +201,12 @@ export default function AdminPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher par nom ou montant..."
-              className="border border-orange-200 rounded-lg px-4 py-2 w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="border border-primary rounded-lg px-4 py-2 w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="border border-orange-200 rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="border border-primary rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">Tous les statuts</option>
               <option value={TransactionStatus.PENDING}>
@@ -222,7 +222,7 @@ export default function AdminPage() {
             <select
               value={filterCountry}
               onChange={(e) => setFilterCountry(e.target.value)}
-              className="border border-orange-200 rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="border border-primary rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">Tous les pays</option>
               {countriesList.map((c) => (
@@ -235,7 +235,7 @@ export default function AdminPage() {
               type="date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
-              className="border border-orange-200 rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="border border-primary rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <div className="overflow-x-auto">
@@ -246,7 +246,7 @@ export default function AdminPage() {
                   alt="Aucune transaction"
                   className="w-20 h-20 mb-4 opacity-60"
                 />
-                <div className="text-orange-600 font-bold text-lg mb-2">
+                <div className="text-primary font-bold text-lg mb-2">
                   Aucune transaction trouvée
                 </div>
                 <div className="text-gray-400">
@@ -254,9 +254,9 @@ export default function AdminPage() {
                 </div>
               </div>
             ) : (
-              <table className="min-w-full bg-white rounded-xl shadow border border-orange-100">
+              <table className="min-w-full bg-white rounded-xl shadow border border-red-100">
                 <thead>
-                  <tr className="bg-orange-50 text-orange-700">
+                  <tr className="bg-red-50 text-primary">
                     <th className="py-3 px-4 text-left font-semibold">ID</th>
                     <th className="py-3 px-4 text-left font-semibold">
                       Client
@@ -285,7 +285,7 @@ export default function AdminPage() {
                       className="border-b hover:bg-orange-50/40 transition"
                     >
                       {/* transaction ID */}
-                      <td className="py-2 px-4 font-medium text-orange-600">
+                      <td className="py-2 px-4 font-medium text-primary">
                         {t.id}
                       </td>
                       {/* client name or "Anonyme" */}
@@ -379,7 +379,7 @@ export default function AdminPage() {
             )}
 
             {/* Somme total */}
-            <div className="font-bold text-orange-700 text-lg md:text-xl">
+            <div className="font-bold text-primary text-lg md:text-xl">
               Somme totale : {formatXOF(totalSum)}
             </div>
           </div>
@@ -387,26 +387,26 @@ export default function AdminPage() {
             {filteredStats.map((s) => (
               <Card
                 key={s.country}
-                className="border border-orange-200 shadow rounded-xl bg-gradient-to-br from-orange-50 to-white p-4 flex flex-col items-center justify-between min-h-[120px]"
+                className="border border-primary shadow rounded-xl bg-gradient-to-br from-red-50 to-white p-4 flex flex-col items-center justify-between min-h-[120px]"
               >
                 <CardContent className="flex flex-col items-center justify-between w-full p-0">
-                  <h2 className="text-lg font-bold text-orange-600 mb-3 text-center truncate w-full">
+                  <h2 className="text-lg font-bold text-primary mb-3 text-center truncate w-full">
                     {s.country}
                   </h2>
                   <div className="flex flex-row items-center justify-between w-full gap-4">
-                    <div className="flex flex-col items-center flex-1 bg-orange-100 rounded-lg py-3 mx-1">
-                      <span className="text-xs font-semibold text-orange-700 mb-1">
+                    <div className="flex flex-col items-center flex-1 bg-red-100 rounded-lg py-3 mx-1">
+                      <span className="text-xs font-semibold text-primary mb-1">
                         Transactions
                       </span>
-                      <span className="text-2xl font-bold text-orange-600 whitespace-nowrap">
+                      <span className="text-2xl font-bold text-primary whitespace-nowrap">
                         {s.count}
                       </span>
                     </div>
                     <div className="flex flex-col items-center flex-1 bg-orange-100 rounded-lg py-3 mx-1">
-                      <span className="text-xs font-semibold text-orange-700 mb-1">
+                      <span className="text-xs font-semibold text-primary mb-1">
                         Somme totale
                       </span>
-                      <span className="text-xl font-bold px-4 text-orange-600 whitespace-nowrap">
+                      <span className="text-xl font-bold px-4 text-primary whitespace-nowrap">
                         {formatXOF(s.total)}
                       </span>
                     </div>

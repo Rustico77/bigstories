@@ -71,24 +71,24 @@ export default function ClientPage() {
 
   return (
     <div className="max-w-md mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-center">Paiement BigStories</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center text-primary">Paiement BigStories</h1>
       <form className="bg-white rounded-xl shadow p-8 space-y-6" onSubmit={handlePay}>
         <div>
-          <label className="block mb-2 font-semibold text-orange-700">Nom complet (optionnel)</label>
+          <label className="block mb-2 font-semibold text-primary">Nom complet (optionnel)</label>
           <input
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
-            className="w-full border border-orange-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="Nom et prénom du client"
           />
         </div>
         <div>
-          <label className="block mb-2 font-semibold text-orange-700">Pays*</label>
+          <label className="block mb-2 font-semibold text-primary">Pays*</label>
           <select
             value={country}
             onChange={e => setCountry(e.target.value)}
-            className="w-full border border-orange-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
             {countries.map(c => (
               <option key={c} value={c}>{c}</option>
@@ -96,11 +96,11 @@ export default function ClientPage() {
           </select>
         </div>
         <div>
-          <label className="block mb-2 font-semibold text-orange-700">Moyen de paiement*</label>
+          <label className="block mb-2 font-semibold text-primary">Moyen de paiement*</label>
           <select
             value={paymentMethod}
             onChange={e => setPaymentMethod(e.target.value)}
-            className="w-full border border-orange-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
             {paymentMethods.map(m => (
               <option key={m.value} value={m.value}>{m.label}</option>
@@ -108,7 +108,7 @@ export default function ClientPage() {
           </select>
         </div>
         <div>
-          <label className="block mb-2 font-semibold text-orange-700">Montant à payer*</label>
+          <label className="block mb-2 font-semibold text-primary">Montant à payer*</label>
           <input
             type="number"
             required
@@ -116,7 +116,7 @@ export default function ClientPage() {
             value={amount}
             step={5}
             onChange={e => setAmount(e.target.value)}
-            className="w-full border border-orange-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="Ex: 5 000"
           />
           <div className="flex flex-wrap gap-2 mt-3">
@@ -124,7 +124,7 @@ export default function ClientPage() {
               <button
                 type="button"
                 key={val}
-                className={`px-4 py-2 rounded-lg border font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 transition ${amount == val ? 'border-orange-500 bg-orange-100' : 'border-orange-200'}`}
+                className={`px-4 py-2 rounded-lg border font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition ${parseInt(amount) === val ? 'border-primary bg-primary/20' : 'border-primary/30'}`}
                 onClick={() => setAmount(val.toString())}
               >
                 {formatXOF(val)}
@@ -132,12 +132,12 @@ export default function ClientPage() {
             ))}
           </div>
           {amount && !isNaN(Number(amount)) && (
-            <div className="mt-2 text-right text-orange-600 font-bold text-lg">{formatXOF(amount)}</div>
+            <div className="mt-2 text-right text-primary font-bold text-lg">{formatXOF(amount)}</div>
           )}
         </div>
         <button
           type="submit"
-          className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition"
+          className="w-full bg-primary text-white py-3 rounded-lg font-semibold cursor-pointer hover:bg-primary/80 transition"
           disabled={loading}
         >
           {loading ? "Paiement en cours..." : "Payer"}

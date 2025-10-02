@@ -30,16 +30,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-orange-50">
+  <div className="min-h-screen flex items-center justify-center bg-primary/10">
       <form
         onSubmit={handleLogin}
         className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm flex flex-col gap-6"
       >
-        <h1 className="text-2xl font-bold text-orange-600 text-center mb-2">
+        <h1 className="text-2xl font-bold text-primary text-center mb-2">
           Connexion
         </h1>
         <div>
-          <label className="block mb-2 font-semibold text-orange-700">
+          <label className="block mb-2 font-semibold text-primary">
             Email
           </label>
           <input
@@ -47,12 +47,12 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-orange-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="Votre email"
           />
         </div>
         <div>
-          <label className="block mb-2 font-semibold text-orange-700">
+          <label className="block mb-2 font-semibold text-primary">
             Mot de passe
           </label>
           <div className="relative">
@@ -61,12 +61,12 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-orange-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400 pr-10"
+              className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40 pr-10"
               placeholder="Votre mot de passe"
             />
             <button
               type="button"
-              className="absolute right-2 top-2 text-orange-500"
+              className="absolute right-2 top-2 text-primary"
               onClick={() => setShowPassword(!showPassword)}
               tabIndex={-1}
             >
@@ -81,7 +81,7 @@ export default function LoginPage() {
         )}
         <button
           type="submit"
-          className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition cursor-pointer"
+          className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary/80 transition cursor-pointer"
           disabled={loading}
         >
           {loading ? "Connexion..." : "Se connecter"}
