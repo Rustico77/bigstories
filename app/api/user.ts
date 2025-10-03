@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { UserModel } from "../models/user";
 
 export default class User {
   // Récupérer toutes les utilisateurs
@@ -42,6 +43,42 @@ export default class User {
          role 
         } });
       return { message: "Utilisateur Créé avec succès", isSuccess: true};
+    } catch (error) {
+      return { message: "Erreur lors de la création", isSuccess: false };
+    }
+  }
+
+  // Créer un utilisateur
+  static async update(id: string, data: UserModel) {
+    try {
+      const user = await prisma.user.findUnique({ where: { id } });
+      if(!user) {
+        return { message: "Cet Utilisateur n'existe plus.", isSuccess: false };
+      }
+
+      await prisma.user.update({
+        where: { id },
+        data: data
+      });
+      return { message: "Utilisateur mis à jour avec succès", isSuccess: true};
+    } catch (error) {
+      return { message: "Erreur lors de la mise à jour de l'utilisateur", isSuccess: false };
+    }
+  }
+
+  // Créer un utilisateur
+  static async resetPassword(id: string, password: string) {
+    try {
+      const user = await prisma.user.findUnique({ where: { id } });
+      if(!user) {
+        return { message: "Cet Utilisateur n'existe plus.", isSuccess: false };
+      }
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      const res = await this.update(id, { ...user, password: passwordHash });
+      if(!res.isSuccess) return res;
+
+      return { message: `Le mot de passe de ${user.email} a été réinitialisé avec succès.`, isSuccess: true};
     } catch (error) {
       return { message: "Erreur lors de la création", isSuccess: false };
     }

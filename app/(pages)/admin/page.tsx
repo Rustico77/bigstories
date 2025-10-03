@@ -3,7 +3,7 @@ import { use, useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getSessionAction } from "@/app/actions/auth";
+import { getSessionAction, logoutAction } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import Loading from "@/app/components/loading";
@@ -14,6 +14,10 @@ import { checkPayment } from "@/app/actions/cinetPay";
 import { updateTransaction } from "@/app/actions/transaction";
 import CreateUserModal from "@/app/components/modals/createUserModal";
 import { useAdmin } from "@/hooks/useAdmin";
+import { resetUserPassword } from "@/app/actions/user";
+import { toast } from "sonner";
+import ShowPasswordModal from "@/app/components/modals/showPasswordModal";
+import { set } from "react-hook-form";
 
 // const transactions = [
 //   {
@@ -58,6 +62,8 @@ export default function AdminPage() {
   const [statsPeriod, setStatsPeriod] = useState("all");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [openPassword, setOpenPassword] = useState(false);
   const route = useRouter();
   const { user, loading } = useCurrentUser();
   const { transactions, loadTransactions, transactionLoading } =
@@ -208,6 +214,20 @@ export default function AdminPage() {
     }
   };
 
+  const handleResetPassword = async (id: string) => {
+    setNewPassword("");
+    const password = Math.floor(10000000 + Math.random() * 90000000).toString();
+
+    const res = await resetUserPassword(id, password);
+    if (res.isSuccess) {
+      toast.success(res.message);
+      setNewPassword(password);
+      setOpenPassword(true);
+    } else {
+      toast.error(res.message);
+    }
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       route.push("/login");
@@ -222,7 +242,26 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-primary">Tableau de bord</h1>
+      {/* Show password modal */}
+      <ShowPasswordModal
+        password={newPassword}
+        open={openPassword}
+        setOpen={setOpenPassword}
+      />
+
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold mb-8 text-primary">
+          Tableau de bord
+        </h1>
+        <div className="space-x-4 flex items-center">
+          <span className="border-4 rounded-2xl font-bold bg-red-100 border-primary p-2">
+            {user?.email}
+          </span>
+          <button onClick={() => {logoutAction(); route.push("/login")}} className="p-2 bg-orange-100 rounded-2xl border-2 border-orange-300 hover:bg-primary hover:text-white cursor-pointer ">
+            Se déconnecter
+          </button>
+        </div>
+      </div>
       <Tabs defaultValue="transactions" className="w-full">
         <TabsList className="flex justify-start gap-2 bg-orange-50 rounded-lg p-1 mb-8">
           <TabsTrigger
@@ -524,7 +563,7 @@ export default function AdminPage() {
               <h2 className="text-2xl font-bold text-primary mb-4">
                 Gestion des utilisateurs
               </h2>
-              <CreateUserModal actions={() => loadAdmins()}/>
+              <CreateUserModal actions={() => loadAdmins()} />
             </div>
             {/* TODO: Replace with real user data and CRUD actions */}
             <table className="min-w-full bg-white rounded-xl shadow border border-primary">
@@ -532,8 +571,12 @@ export default function AdminPage() {
                 <tr className="bg-primary/10 text-primary">
                   <th className="py-3 px-4 text-left font-semibold">Email</th>
                   <th className="py-3 px-4 text-left font-semibold">Rôle</th>
-                  <th className="py-3 px-4 text-left font-semibold">Date de création</th>
-                  <th className="py-3 px-4 text-left font-semibold">Date de modification</th>
+                  <th className="py-3 px-4 text-left font-semibold">
+                    Date de création
+                  </th>
+                  <th className="py-3 px-4 text-left font-semibold">
+                    Date de modification
+                  </th>
                   <th className="py-3 px-4 text-left font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -562,11 +605,54 @@ export default function AdminPage() {
                         : ""}
                     </td>
                     <td className="py-2 px-4 flex gap-2">
-                      <button title="Modifier" className="p-2 rounded bg-primary/10 hover:bg-primary/20 text-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#801919" d="M14.23 20v-2.21l5.334-5.307q.148-.13.305-.19t.315-.062q.172 0 .338.064q.166.065.301.194l.925.944q.123.148.188.308q.064.159.064.319t-.052.322t-.2.31L16.44 20zM5 18.616v-1.647q0-.619.36-1.158q.361-.54.97-.838q1.416-.679 2.834-1.018q1.417-.34 2.836-.34q.675 0 1.354.084t1.367.238l-2.875 2.855v1.824zm15.19-3.6l.925-.956l-.924-.944l-.95.95zM12 11.385q-1.237 0-2.119-.882T9 8.385t.881-2.12T12 5.386t2.119.88t.881 2.12t-.881 2.118t-2.119.882"/></svg>
+                      <button
+                        title="Modifier"
+                        className="p-2 rounded bg-primary/10 hover:bg-primary/20 text-primary"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="32"
+                          height="32"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            fill="#801919"
+                            d="M14.23 20v-2.21l5.334-5.307q.148-.13.305-.19t.315-.062q.172 0 .338.064q.166.065.301.194l.925.944q.123.148.188.308q.064.159.064.319t-.052.322t-.2.31L16.44 20zM5 18.616v-1.647q0-.619.36-1.158q.361-.54.97-.838q1.416-.679 2.834-1.018q1.417-.34 2.836-.34q.675 0 1.354.084t1.367.238l-2.875 2.855v1.824zm15.19-3.6l.925-.956l-.924-.944l-.95.95zM12 11.385q-1.237 0-2.119-.882T9 8.385t.881-2.12T12 5.386t2.119.88t.881 2.12t-.881 2.118t-2.119.882"
+                          />
+                        </svg>
                       </button>
-                      <button title="Supprimer" className="p-2 rounded bg-red-100 hover:bg-red-200 text-red-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#801919" d="m20.37 8.91l-1 1.73l-12.13-7l1-1.73l3.04 1.75l1.36-.37l4.33 2.5l.37 1.37zM6 19V7h5.07L18 11v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2"/></svg>
+                      <button
+                        title="Supprimer"
+                        className="p-2 rounded bg-red-100 hover:bg-red-200 text-red-600"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="32"
+                          height="32"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            fill="#801919"
+                            d="m20.37 8.91l-1 1.73l-12.13-7l1-1.73l3.04 1.75l1.36-.37l4.33 2.5l.37 1.37zM6 19V7h5.07L18 11v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleResetPassword(admin.id)}
+                        title="ResetPassword"
+                        className="p-2 rounded bg-red-100 hover:bg-red-200 text-red-600"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="32"
+                          height="32"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            fill="#801919"
+                            d="M12.63 2c5.53 0 10.01 4.5 10.01 10s-4.48 10-10.01 10c-3.51 0-6.58-1.82-8.37-4.57l1.58-1.25C7.25 18.47 9.76 20 12.64 20a8 8 0 0 0 8-8a8 8 0 0 0-8-8C8.56 4 5.2 7.06 4.71 11h2.76l-3.74 3.73L0 11h2.69c.5-5.05 4.76-9 9.94-9m2.96 8.24c.5.01.91.41.91.92v4.61c0 .5-.41.92-.92.92h-5.53c-.51 0-.92-.42-.92-.92v-4.61c0-.51.41-.91.91-.92V9.23c0-1.53 1.25-2.77 2.77-2.77c1.53 0 2.78 1.24 2.78 2.77zm-2.78-2.38c-.75 0-1.37.61-1.37 1.37v1.01h2.75V9.23c0-.76-.62-1.37-1.38-1.37"
+                          />
+                        </svg>
                       </button>
                     </td>
                   </tr>

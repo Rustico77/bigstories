@@ -12,6 +12,7 @@ export async function loginAction(email: string, password: string) {
 
 export async function logoutAction() {
   await logout();
+  
 }
 
 export async function getSessionAction() {
