@@ -84,11 +84,8 @@ export default function CreateUserModal({actions, user, id} : UpdateUserModalPro
                 type="email"
                 hidden
                 placeholder="Email"
-                {...register("email", { required: "Email requis" })}
+                value={user.email}
               />
-              {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
-              )}
             </div>
 
             {/* Champ Rôle */}
