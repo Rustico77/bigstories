@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { UserRole } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 export default class User {
   // Récupérer toutes les utilisateurs
@@ -26,14 +28,19 @@ export default class User {
 
 
   // Créer un utilisateur
-  static async create(email: string) {
+  static async create(email: string, role: UserRole) {
     try {
       const user = await prisma.user.findUnique({ where: { email } });  
       if(user) {
         return { message: "Utilisateur déjà existant", isSuccess: false };
       }
-      const password = Math.random().toString(36).slice(-8); // Génère un mot de passe aléatoire
-      await prisma.user.create({ data: { email, password } });
+      const password = Math.floor(10000000 + Math.random() * 90000000).toString();
+      const passwordHash = await bcrypt.hash(password, 10);
+      await prisma.user.create({ data: {
+         email, 
+         password: passwordHash, 
+         role 
+        } });
       return { message: "Utilisateur Créé avec succès", isSuccess: true};
     } catch (error) {
       return { message: "Erreur lors de la création", isSuccess: false };

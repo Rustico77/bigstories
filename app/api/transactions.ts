@@ -16,7 +16,9 @@ export default class Transaction {
 
 	// Récupérer toutes les transactions
 	static async getAll() {
-		return await prisma.transaction.findMany();
+		return await prisma.transaction.findMany({
+			orderBy: { createdAt: "desc" },
+		});
 	}
 
 	// Récupérer une transaction par ID

@@ -5,9 +5,21 @@ import { createTransaction } from "./actions/transaction";
 import { TransactionChannel, TransactionStatus } from "@prisma/client";
 import { toast } from "sonner";
 import { initPayment } from "./actions/cinetPay";
-import { TransactionResponse } from "./models/transaction";
+import { TransactionModel, TransactionResponse } from "./models/transaction";
+import { createId } from "@paralleldrive/cuid2";
 
-const countries = ["Togo", "Bénin", "Burkina-Faso", "Niger", "Guinée Conakry", "Cameroon", "Gabon", "Côte d'Ivoire", "Sénégal", "Mali"];
+const countries = [
+  "Togo",
+  "Bénin",
+  "Burkina-Faso",
+  "Niger",
+  "Guinée Conakry",
+  "Cameroon",
+  "Gabon",
+  "Côte d'Ivoire",
+  "Sénégal",
+  "Mali",
+];
 const paymentMethods = [
   // { value: TransactionChannel.ALL, label: "Tout" },
   { value: TransactionChannel.MOBILE_MONEY, label: "Mobile Money" },
@@ -17,10 +29,10 @@ const paymentMethods = [
 
 // Helper pour formater les montants XOF avec espaces
 function formatXOF(amount: number | string) {
-  if (!amount) return '';
-  const num = typeof amount === 'string' ? parseInt(amount) : amount;
-  if (isNaN(num)) return '';
-  return num.toLocaleString('fr-FR').replace(/\u202f|,/g, ' ') + ' XOF';
+  if (!amount) return "";
+  const num = typeof amount === "string" ? parseInt(amount) : amount;
+  if (isNaN(num)) return "";
+  return num.toLocaleString("fr-FR").replace(/\u202f|,/g, " ") + " XOF";
 }
 
 export default function ClientPage() {
@@ -35,7 +47,8 @@ export default function ClientPage() {
     e.preventDefault();
     setLoading(true);
 
-    const res = await createTransaction({
+    const transactionData: TransactionModel = {
+      id: createId(),
       amount: parseInt(amount),
       country: country,
       channels: paymentMethod,
@@ -43,27 +56,29 @@ export default function ClientPage() {
       message: "",
       currency: "XOF",
       paymentMethod: "",
-      paymentUrl: "",
       status: TransactionStatus.PENDING,
-      clientName: name || null,
-    });
+      clientName: name || undefined,
+    };
 
-
-    if(!res.isSuccess){
-      toast.error(res.message);
-    }else{
-      const resPayment = await initPayment(res.data as TransactionResponse);
-      if(resPayment.code !== "201"){
-        toast.error(resPayment.description || "Erreur lors de l'initialisation du paiement");
-      }else{
-        // Redirection vers l'URL de paiement
-        if(resPayment.data && resPayment.data.payment_url){
-          window.location.href = resPayment.data.payment_url;
+    // Initialisation du paiement via CinetPay
+    const resPayment = await initPayment(transactionData);
+    if (resPayment.code !== "201") {
+      toast.error(
+        resPayment.description || "Erreur lors de l'initialisation du paiement"
+      );
+    } else {
+      // Redirection vers l'URL de paiement
+      if (resPayment.data && resPayment.data.payment_url) {
+        // Enregistrement de la transaction dans la base de données
+        const res = await createTransaction(transactionData);
+        if (!res.isSuccess) {
+          toast.error(res.message);
         }else{
-          toast.error("URL de paiement non disponible");
+          window.location.href = resPayment.data.payment_url;
         }
+      } else {
+        toast.error("URL de paiement non disponible");
       }
-
     }
 
     setLoading(false);
@@ -71,14 +86,21 @@ export default function ClientPage() {
 
   return (
     <div className="max-w-md mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-center text-primary">Paiement BigStories</h1>
-      <form className="bg-white rounded-xl shadow p-8 space-y-6" onSubmit={handlePay}>
+      <h1 className="text-3xl font-bold mb-8 text-center text-primary">
+        Paiement BigStories
+      </h1>
+      <form
+        className="bg-white rounded-xl shadow p-8 space-y-6"
+        onSubmit={handlePay}
+      >
         <div>
-          <label className="block mb-2 font-semibold text-primary">Nom complet (optionnel)</label>
+          <label className="block mb-2 font-semibold text-primary">
+            Nom complet (optionnel)
+          </label>
           <input
             type="text"
             value={name}
-            onChange={e => setName(e.target.value)}
+            onChange={(e) => setName(e.target.value)}
             className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="Nom et prénom du client"
           />
@@ -87,44 +109,56 @@ export default function ClientPage() {
           <label className="block mb-2 font-semibold text-primary">Pays*</label>
           <select
             value={country}
-            onChange={e => setCountry(e.target.value)}
+            onChange={(e) => setCountry(e.target.value)}
             className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
-            {countries.map(c => (
-              <option key={c} value={c}>{c}</option>
+            {countries.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block mb-2 font-semibold text-primary">Moyen de paiement*</label>
+          <label className="block mb-2 font-semibold text-primary">
+            Moyen de paiement*
+          </label>
           <select
             value={paymentMethod}
-            onChange={e => setPaymentMethod(e.target.value)}
+            onChange={(e) => setPaymentMethod(e.target.value)}
             className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
-            {paymentMethods.map(m => (
-              <option key={m.value} value={m.value}>{m.label}</option>
+            {paymentMethods.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block mb-2 font-semibold text-primary">Montant à payer*</label>
+          <label className="block mb-2 font-semibold text-primary">
+            Montant à payer*
+          </label>
           <input
             type="number"
             required
             min={100}
             value={amount}
             step={5}
-            onChange={e => setAmount(e.target.value)}
+            onChange={(e) => setAmount(e.target.value)}
             className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="Ex: 5 000"
           />
           <div className="flex flex-wrap gap-2 mt-3">
-            {suggestedAmounts.map(val => (
+            {suggestedAmounts.map((val) => (
               <button
                 type="button"
                 key={val}
-                className={`px-4 py-2 rounded-lg border font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition ${parseInt(amount) === val ? 'border-primary bg-primary/20' : 'border-primary/30'}`}
+                className={`px-4 py-2 rounded-lg border font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition ${
+                  parseInt(amount) === val
+                    ? "border-primary bg-primary/20"
+                    : "border-primary/30"
+                }`}
                 onClick={() => setAmount(val.toString())}
               >
                 {formatXOF(val)}
@@ -132,7 +166,9 @@ export default function ClientPage() {
             ))}
           </div>
           {amount && !isNaN(Number(amount)) && (
-            <div className="mt-2 text-right text-primary font-bold text-lg">{formatXOF(amount)}</div>
+            <div className="mt-2 text-right text-primary font-bold text-lg">
+              {formatXOF(amount)}
+            </div>
           )}
         </div>
         <button

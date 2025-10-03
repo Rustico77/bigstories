@@ -22,6 +22,11 @@ enum TransactionStatus {
   PENDING
 }
 
+enum UserRole {
+  ADMIN
+  USER
+}
+
 enum TransactionMessage {
   SUCCES
   CREATED
@@ -35,6 +40,7 @@ enum TransactionMessage {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  role      UserRole @default(USER)
   password  String   // hashé avec bcrypt
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -42,7 +48,7 @@ model User {
 
 // Transactions liées à CinetPay
 model Transaction {
-  id             String   @id @default(cuid())
+  id             String   @id
   clientName     String?
   amount         Int
   currency       String
@@ -52,7 +58,6 @@ model Transaction {
   channels       TransactionChannel
   country        String
   paymentMethod  String
-  paymentUrl     String?  // url de redirection CinetPay
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -1,10 +1,12 @@
 "use server";
 
+import { UserRole } from "@prisma/client";
 import User from "../api/user";
+import { TransactionModel } from "../models/transaction";
 
 
-export async function createUser(email: string) {
-  return await User.create(email);
+export async function createUser(email: string, role: UserRole) {
+  return await User.create(email, role);
 }
 
 export async function getAllUser() {

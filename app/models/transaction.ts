@@ -1,6 +1,7 @@
 import { TransactionChannel, TransactionStatus } from "@prisma/client";
 
 export interface TransactionModel {
+  id: string;
   clientName?: string;
   amount: number;
   currency: string;
@@ -10,9 +11,6 @@ export interface TransactionModel {
   channels: TransactionChannel;
   country: string;
   paymentMethod: string;
-  paymentUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface TransactionResponse {
@@ -26,7 +24,6 @@ export interface TransactionResponse {
   channels: TransactionChannel;
   country: string;
   paymentMethod: string;
-  paymentUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }

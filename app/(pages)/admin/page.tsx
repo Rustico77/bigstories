@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,8 @@ import { TransactionStatus } from "@prisma/client";
 import { getTransactionStatusLabel } from "@/app/utils/enumLabels";
 import { checkPayment } from "@/app/actions/cinetPay";
 import { updateTransaction } from "@/app/actions/transaction";
+import CreateUserModal from "@/app/components/modals/createUserModal";
+import { useAdmin } from "@/hooks/useAdmin";
 
 // const transactions = [
 //   {
@@ -51,6 +53,7 @@ function formatXOF(amount: number) {
 }
 
 export default function AdminPage() {
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   // Filtre stats
   const [statsPeriod, setStatsPeriod] = useState("all");
   const [customStart, setCustomStart] = useState("");
@@ -59,6 +62,7 @@ export default function AdminPage() {
   const { user, loading } = useCurrentUser();
   const { transactions, loadTransactions, transactionLoading } =
     useTransaction();
+  const { listAdmin, loadAdmins, adminLoading } = useAdmin();
 
   // Helper pour filtrer les transactions par période
   function filterTransactionsByPeriod(
@@ -68,31 +72,62 @@ export default function AdminPage() {
   ) {
     const now = new Date();
     return transactions.filter((t) => {
-      const tDate = new Date(t.date);
+      const tDate = t.createdAt ? new Date(t.createdAt) : null;
+      if (!tDate) return false;
       if (period === "today") {
-        return tDate.toDateString() === now.toDateString();
+        // Compare only the date part
+        const todayStr = now.toISOString().slice(0, 10);
+        return tDate.toISOString().slice(0, 10) === todayStr && t.code === "00";
       }
       if (period === "week") {
-        const weekStart = new Date(now);
-        weekStart.setDate(now.getDate() - now.getDay());
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        return tDate >= weekStart && tDate <= weekEnd;
+        // Monday to Sunday of current week
+        const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay(); // Sunday=7
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - dayOfWeek + 1);
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+        return tDate >= monday && tDate <= sunday && t.code === "00";
       }
       if (period === "month") {
-        return (
-          tDate.getMonth() === now.getMonth() &&
-          tDate.getFullYear() === now.getFullYear()
+        // 1st to last day of current month
+        const firstDay = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          1,
+          0,
+          0,
+          0,
+          0
         );
+        const lastDay = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999
+        );
+        return tDate >= firstDay && tDate <= lastDay && t.code === "00";
       }
       if (period === "custom" && start && end) {
         const dStart = new Date(start);
+        dStart.setHours(0, 0, 0, 0);
         const dEnd = new Date(end);
-        return tDate >= dStart && tDate <= dEnd;
+        dEnd.setHours(23, 59, 59, 999);
+        return tDate >= dStart && tDate <= dEnd && t.code === "00";
       }
-      return true;
+      return t.code === "00";
     });
   }
+
+  // Méthodes de paiement dynamiques
+  const paymentMethodsList = Array.from(
+    new Set(transactions.map((t) => t.paymentMethod).filter(Boolean))
+  );
+  const [filterPaymentMethod, setFilterPaymentMethod] = useState("");
 
   // Liste des pays de référence (pour stats)
   const referenceCountries = Array.from(
@@ -135,18 +170,30 @@ export default function AdminPage() {
       t.amount.toString().includes(search);
     const matchStatus = filterStatus === "" || t.status === filterStatus;
     const matchCountry = filterCountry === "" || t.country === filterCountry;
+    const matchPaymentMethod =
+      filterPaymentMethod === "" || t.paymentMethod === filterPaymentMethod;
     const matchDate =
       filterDate === "" ||
       (t.createdAt &&
         new Date(t.createdAt).toISOString().slice(0, 10) === filterDate);
-    return matchSearch && matchStatus && matchCountry && matchDate;
+    return (
+      matchSearch &&
+      matchStatus &&
+      matchCountry &&
+      matchPaymentMethod &&
+      matchDate
+    );
   });
 
   const updateTransactions = async () => {
     const listTrans = transactions.filter((t) => t.code !== "00");
 
     for (const t of listTrans) {
-      if(t.createdAt && (new Date().getTime() - new Date(t.createdAt).getTime()) > 24*60*60*1000){
+      if (
+        t.createdAt &&
+        new Date().getTime() - new Date(t.createdAt).getTime() >
+          24 * 60 * 60 * 1000
+      ) {
         continue; // Skip if transaction is older than 24 hours
       }
       const res = await checkPayment(t.id);
@@ -166,6 +213,7 @@ export default function AdminPage() {
       route.push("/login");
     } else {
       loadTransactions();
+      loadAdmins();
       updateTransactions();
     }
   }, [user, loading, route]);
@@ -174,9 +222,7 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-primary">
-        Tableau de bord
-      </h1>
+      <h1 className="text-3xl font-bold mb-8 text-primary">Tableau de bord</h1>
       <Tabs defaultValue="transactions" className="w-full">
         <TabsList className="flex justify-start gap-2 bg-orange-50 rounded-lg p-1 mb-8">
           <TabsTrigger
@@ -190,6 +236,12 @@ export default function AdminPage() {
             className="data-[state=active]:bg-primary data-[state=active]:text-white text-primary px-10 py-5 rounded-lg font-semibold transition-all cursor-pointer"
           >
             Statistiques par pays
+          </TabsTrigger>
+          <TabsTrigger
+            value="settings"
+            className="data-[state=active]:bg-primary data-[state=active]:text-white text-primary px-10 py-5 rounded-lg font-semibold transition-all cursor-pointer"
+          >
+            Paramètres
           </TabsTrigger>
         </TabsList>
 
@@ -231,12 +283,41 @@ export default function AdminPage() {
                 </option>
               ))}
             </select>
+            <select
+              value={filterPaymentMethod}
+              onChange={(e) => setFilterPaymentMethod(e.target.value)}
+              className="border border-primary rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="">Toutes les méthodes</option>
+              {paymentMethodsList.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
             <input
               type="date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
               className="border border-primary rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-primary"
             />
+          </div>
+          <div className="flex items-center justify-end mb-4">
+            <label className="mr-2 font-semibold text-primary">
+              Nombre de lignes :
+            </label>
+            <select
+              value={rowsPerPage}
+              onChange={(e) => setRowsPerPage(Number(e.target.value))}
+              className="border border-primary rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              style={{ width: "100px" }}
+            >
+              {[10, 20, 50, 100].map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="overflow-x-auto">
             {filteredTransactions.length === 0 ? (
@@ -254,7 +335,7 @@ export default function AdminPage() {
                 </div>
               </div>
             ) : (
-              <table className="min-w-full bg-white rounded-xl shadow border border-red-100">
+              <table className="min-w-full bg-white rounded-xl shadow border border-primary">
                 <thead>
                   <tr className="bg-red-50 text-primary">
                     <th className="py-3 px-4 text-left font-semibold">ID</th>
@@ -279,7 +360,7 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTransactions.map((t) => (
+                  {filteredTransactions.slice(0, rowsPerPage).map((t) => (
                     <tr
                       key={t.id}
                       className="border-b hover:bg-orange-50/40 transition"
@@ -360,22 +441,41 @@ export default function AdminPage() {
 
             {/* Custom filter */}
             {statsPeriod === "custom" && (
-              <>
+              <div className="flex flex-row gap-4 w-full items-center">
+                <label className="text-sm font-semibold text-primary">
+                  Date de début
+                </label>
                 <input
                   type="date"
                   value={customStart}
-                  onChange={(e) => setCustomStart(e.target.value)}
-                  className="border border-orange-200 rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  onChange={(e) => {
+                    setCustomStart(e.target.value);
+                    if (
+                      customEnd &&
+                      e.target.value &&
+                      e.target.value > customEnd
+                    ) {
+                      setCustomEnd("");
+                    }
+                  }}
+                  className="border border-orange-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                   placeholder="Date début"
+                  style={{ maxWidth: "160px" }}
                 />
+                <label className="text-sm font-semibold text-primary">
+                  Date de fin
+                </label>
                 <input
                   type="date"
                   value={customEnd}
                   onChange={(e) => setCustomEnd(e.target.value)}
-                  className="border border-orange-200 rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  className="border border-orange-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                   placeholder="Date fin"
+                  disabled={!customStart}
+                  min={customStart || undefined}
+                  style={{ maxWidth: "160px" }}
                 />
-              </>
+              </div>
             )}
 
             {/* Somme total */}
@@ -414,6 +514,65 @@ export default function AdminPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </TabsContent>
+
+        {/* Paramètres */}
+        <TabsContent value="settings">
+          <div className="mb-8">
+            <div className="mt-6 mb-4 flex justify-between">
+              <h2 className="text-2xl font-bold text-primary mb-4">
+                Gestion des utilisateurs
+              </h2>
+              <CreateUserModal actions={() => loadAdmins()}/>
+            </div>
+            {/* TODO: Replace with real user data and CRUD actions */}
+            <table className="min-w-full bg-white rounded-xl shadow border border-primary">
+              <thead>
+                <tr className="bg-primary/10 text-primary">
+                  <th className="py-3 px-4 text-left font-semibold">Email</th>
+                  <th className="py-3 px-4 text-left font-semibold">Rôle</th>
+                  <th className="py-3 px-4 text-left font-semibold">Date de création</th>
+                  <th className="py-3 px-4 text-left font-semibold">Date de modification</th>
+                  <th className="py-3 px-4 text-left font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {listAdmin.map((admin) => (
+                  <tr
+                    key={admin.id}
+                    className="border-b hover:bg-orange-50/40 transition"
+                  >
+                    <td className="py-2 px-4">{admin.email}</td>
+                    <td className="py-2 px-4">{admin.role}</td>
+                    <td className="py-2 px-4">
+                      {admin.createdAt
+                        ? new Date(admin.createdAt).toLocaleString("fr-FR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })
+                        : ""}
+                    </td>
+                    <td className="py-2 px-4">
+                      {admin.updatedAt
+                        ? new Date(admin.updatedAt).toLocaleString("fr-FR", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })
+                        : ""}
+                    </td>
+                    <td className="py-2 px-4 flex gap-2">
+                      <button title="Modifier" className="p-2 rounded bg-primary/10 hover:bg-primary/20 text-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#801919" d="M14.23 20v-2.21l5.334-5.307q.148-.13.305-.19t.315-.062q.172 0 .338.064q.166.065.301.194l.925.944q.123.148.188.308q.064.159.064.319t-.052.322t-.2.31L16.44 20zM5 18.616v-1.647q0-.619.36-1.158q.361-.54.97-.838q1.416-.679 2.834-1.018q1.417-.34 2.836-.34q.675 0 1.354.084t1.367.238l-2.875 2.855v1.824zm15.19-3.6l.925-.956l-.924-.944l-.95.95zM12 11.385q-1.237 0-2.119-.882T9 8.385t.881-2.12T12 5.386t2.119.88t.881 2.12t-.881 2.118t-2.119.882"/></svg>
+                      </button>
+                      <button title="Supprimer" className="p-2 rounded bg-red-100 hover:bg-red-200 text-red-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#801919" d="m20.37 8.91l-1 1.73l-12.13-7l1-1.73l3.04 1.75l1.36-.37l4.33 2.5l.37 1.37zM6 19V7h5.07L18 11v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2"/></svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </TabsContent>
       </Tabs>

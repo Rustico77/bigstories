@@ -1,3 +1,12 @@
+@keyframes particleMove {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  50% { transform: translateY(-40px) scale(1.2); opacity: 0.7; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.animate-particle {
+  animation: particleMove 4s ease-in-out infinite;
+}
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -120,3 +129,41 @@
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes gradientMove {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes float {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-30px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes float2 {
+  0% { transform: translateX(0) scale(1); }
+  50% { transform: translateX(-40px) scale(1.08); }
+  100% { transform: translateX(0) scale(1); }
+}
+
+@keyframes float3 {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(20px) scale(0.97); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientMove 8s ease-in-out infinite;
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+.animate-float2 {
+  animation: float2 7s ease-in-out infinite;
+}
+.animate-float3 {
+  animation: float3 5s ease-in-out infinite;
+}
+

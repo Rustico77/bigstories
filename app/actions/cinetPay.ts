@@ -3,7 +3,7 @@
 import { TransactionModel, TransactionResponse } from "../models/transaction";
 
 
-export async function initPayment(data: TransactionResponse) {
+export async function initPayment(data: TransactionModel) {
   const res = await fetch(`${process.env.CINETPAY_URL}`, {
     method: "POST",
     headers: {
