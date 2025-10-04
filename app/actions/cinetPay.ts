@@ -1,6 +1,6 @@
 "use server";
 
-import { TransactionModel, TransactionResponse } from "../models/transaction";
+import { TransactionModel } from "../models/transaction";
 
 
 export async function initPayment(data: TransactionModel) {

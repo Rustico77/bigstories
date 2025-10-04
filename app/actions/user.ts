@@ -2,7 +2,6 @@
 
 import { UserRole } from "@prisma/client";
 import User from "../api/user";
-import { TransactionModel } from "../models/transaction";
 import { UserModel } from "../models/user";
 
 

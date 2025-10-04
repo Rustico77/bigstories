@@ -12,7 +12,7 @@ export function useTransaction() {
         setTransactionLoading(true);
 
         const res = await getAllTransaction();
-        setTransactions(res || []);
+        setTransactions(res as Array<TransactionResponse>);
 
         setTransactionLoading(false);
     }

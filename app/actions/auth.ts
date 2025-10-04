@@ -6,7 +6,7 @@ export async function loginAction(email: string, password: string) {
   try {
     return await login(email, password);
   } catch (error: unknown) {
-    return { error: error.message };
+    return { error: error instanceof Error ? error.message : String(error) };
   }
 }
 

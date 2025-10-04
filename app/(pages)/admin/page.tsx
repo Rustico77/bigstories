@@ -1,9 +1,9 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getSessionAction, logoutAction } from "@/app/actions/auth";
+import { logoutAction } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import Loading from "@/app/components/loading";
@@ -17,40 +17,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { resetUserPassword } from "@/app/actions/user";
 import { toast } from "sonner";
 import ShowPasswordModal from "@/app/components/modals/showPasswordModal";
-import { set } from "react-hook-form";
 
-// const transactions = [
-//   {
-//     id: 1,
-//     client: "",
-//     amount: 5000,
-//     country: "Côte d'Ivoire",
-//     date: "2025-09-30",
-//     status: "Succès",
-//   },
-//   {
-//     id: 2,
-//     client: "Awa Diop",
-//     amount: 3000,
-//     country: "Sénégal",
-//     date: "2025-09-29",
-//     status: "Échec",
-//   },
-//   {
-//     id: 3,
-//     client: "Mohamed Traoré",
-//     amount: 7000,
-//     country: "Mali",
-//     date: "2025-09-28",
-//     status: "Succès",
-//   },
-// ];
-
-const stats = [
-  { country: "Côte d'Ivoire", count: 10, total: 50000 },
-  { country: "Sénégal", count: 7, total: 21000 },
-  { country: "Mali", count: 5, total: 35000 },
-];
 
 function formatXOF(amount: number) {
   return amount.toLocaleString("fr-FR").replace(/\u202f|,/g, " ");
@@ -66,9 +33,9 @@ export default function AdminPage() {
   const [openPassword, setOpenPassword] = useState(false);
   const route = useRouter();
   const { user, loading } = useCurrentUser();
-  const { transactions, loadTransactions, transactionLoading } =
+  const { transactions, loadTransactions } =
     useTransaction();
-  const { listAdmin, loadAdmins, adminLoading } = useAdmin();
+  const { listAdmin, loadAdmins } = useAdmin();
 
   // Helper pour filtrer les transactions par période
   function filterTransactionsByPeriod(
@@ -472,7 +439,7 @@ export default function AdminPage() {
               className="border border-orange-200 rounded-lg px-4 py-2 w-full md:w-1/6 focus:outline-none focus:ring-2 focus:ring-orange-400"
             >
               <option value="all">Tout</option>
-              <option value="today">Aujourd'hui</option>
+              <option value="today">{"Aujourd'hui"}</option>
               <option value="week">Cette semaine</option>
               <option value="month">Ce mois</option>
               <option value="custom">Personnalisé</option>

@@ -40,7 +40,7 @@ export default function ClientPage() {
   const suggestedAmounts = [1000, 2000, 5000, 10000, 20000];
   const [country, setCountry] = useState(countries[0]);
   const [name, setName] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState(paymentMethods[0].value);
+  const [paymentMethod, setPaymentMethod] = useState<TransactionChannel>(paymentMethods[0].value);
   const [loading, setLoading] = useState(false);
 
   const handlePay = async (e: React.FormEvent) => {
@@ -125,7 +125,7 @@ export default function ClientPage() {
           </label>
           <select
             value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
+            onChange={(e) => setPaymentMethod(e.target.value as TransactionChannel)}
             className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
             {paymentMethods.map((m) => (
