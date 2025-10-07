@@ -5,12 +5,16 @@ CREATE TYPE "TransactionChannel" AS ENUM ('ALL', 'MOBILE_MONEY', 'CREDIT_CARD', 
 CREATE TYPE "TransactionStatus" AS ENUM ('REFUSED', 'ACCEPTED', 'PENDING');
 
 -- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'USER');
+
+-- CreateEnum
 CREATE TYPE "TransactionMessage" AS ENUM ('SUCCES', 'CREATED', 'PAYMENT_FAILED', 'INSUFFICIENT_BALANCE', 'WAITING_CUSTOMER_PAYMENT', 'TRANSACTION_CANCEL');
 
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "role" "UserRole" NOT NULL DEFAULT 'USER',
     "password" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -30,7 +34,6 @@ CREATE TABLE "Transaction" (
     "channels" "TransactionChannel" NOT NULL,
     "country" TEXT NOT NULL,
     "paymentMethod" TEXT NOT NULL,
-    "paymentUrl" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

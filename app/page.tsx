@@ -5,7 +5,7 @@ import { createTransaction } from "./actions/transaction";
 import { TransactionChannel, TransactionStatus } from "@prisma/client";
 import { toast } from "sonner";
 import { initPayment } from "./actions/cinetPay";
-import { TransactionModel, TransactionResponse } from "./models/transaction";
+import { TransactionModel } from "./models/transaction";
 import { createId } from "@paralleldrive/cuid2";
 
 const countries = [
@@ -85,56 +85,18 @@ export default function ClientPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-10 px-4">
+    <div className="max-w-lg mx-auto py-10 px-4">
+      <div className="bg-red-300 mb-4 h-40 w-72 mx-auto flex items-center shadow-2xl justify-center rounded-lg animate-pulse">
+        <img src="/appLogo.svg" alt="logo"/>
+      </div>
       <h1 className="text-3xl font-bold mb-8 text-center text-primary">
-        Paiement BigStories
+        Paiement
       </h1>
       <form
         className="bg-white rounded-xl shadow p-8 space-y-6"
         onSubmit={handlePay}
       >
-        <div>
-          <label className="block mb-2 font-semibold text-primary">
-            Nom complet (optionnel)
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
-            placeholder="Nom et prénom du client"
-          />
-        </div>
-        <div>
-          <label className="block mb-2 font-semibold text-primary">Pays*</label>
-          <select
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
-          >
-            {countries.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block mb-2 font-semibold text-primary">
-            Moyen de paiement*
-          </label>
-          <select
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value as TransactionChannel)}
-            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
-          >
-            {paymentMethods.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Montant */}
         <div>
           <label className="block mb-2 font-semibold text-primary">
             Montant à payer*
@@ -171,6 +133,57 @@ export default function ClientPage() {
             </div>
           )}
         </div>
+
+        {/* Pays */}
+        <div>
+          <label className="block mb-2 font-semibold text-primary">Pays*</label>
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            {countries.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+
+
+        {/* Moyen de paiement */}
+        <div>
+          <label className="block mb-2 font-semibold text-primary">
+            Moyen de paiement*
+          </label>
+          <select
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value as TransactionChannel)}
+            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            {paymentMethods.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Nom complet */}
+        <div>
+          <label className="block mb-2 font-semibold text-primary">
+            Nom complet (optionnel)
+          </label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+            placeholder="Nom et prénom du client"
+          />
+        </div>
+        
+        
         <button
           type="submit"
           className="w-full bg-primary text-white py-3 rounded-lg font-semibold cursor-pointer hover:bg-primary/80 transition"

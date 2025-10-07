@@ -8,7 +8,7 @@ const COOKIE_NAME = "session";
 
 export async function login(email: string, password: string) {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error("Utilisateur introuvable");
+  if (!user) throw new Error("Utilisateur introuvable");  
 
   const match = await bcrypt.compare(password, user.password);
   if (!match) throw new Error("Mot de passe incorrect");
