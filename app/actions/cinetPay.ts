@@ -19,6 +19,15 @@ export async function initPayment(data: TransactionModel) {
         "notify_url": "",
         "return_url": "",
         "channels": data.channels,
+        "customer_name": data.customer_name,
+        "customer_surname": data.customer_surname,
+        "customer_email": data.customer_email,
+        "customer_phone_number": data.customer_phone_number,
+        "customer_address": data.customer_address,
+        "customer_city": data.customer_city,
+        "customer_country": data.customer_country,
+        "customer_state": data.customer_state,
+        "customer_zip_code": data.customer_zip_code,
     }),
   });
 

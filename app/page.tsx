@@ -5,7 +5,7 @@ import { createTransaction } from "./actions/transaction";
 import { TransactionChannel, TransactionStatus } from "@prisma/client";
 import { toast } from "sonner";
 import { initPayment } from "./actions/cinetPay";
-import { TransactionModel } from "./models/transaction";
+import { TransactionModel, TransactionPaymentModel } from "./models/transaction";
 import { createId } from "@paralleldrive/cuid2";
 
 const countries = [
@@ -20,6 +20,22 @@ const countries = [
   "Sénégal",
   "Mali",
 ];
+
+// Codes pays ISO 3166-1 alpha-2 (ou alpha-3 pour la Guinée Conakry)
+const countryCodes: { [key: string]: string } = {
+  "Togo": "TG",
+  "Bénin": "BJ",
+  "Burkina-Faso": "BF",
+  "Niger": "NE",
+  "Guinée Conakry": "GN",
+  "Cameroon": "CM",
+  "Gabon": "GA",
+  "Côte d'Ivoire": "CI",
+  "Sénégal": "SN",
+  "Mali": "ML",
+};
+
+
 const paymentMethods = [
   // { value: TransactionChannel.ALL, label: "Tout" },
   { value: TransactionChannel.MOBILE_MONEY, label: "Mobile Money" },
@@ -40,14 +56,28 @@ export default function ClientPage() {
   const suggestedAmounts = [1000, 2000, 5000, 10000, 20000];
   const [country, setCountry] = useState(countries[0]);
   const [name, setName] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<TransactionChannel>(paymentMethods[0].value);
+  const [paymentMethod, setPaymentMethod] = useState<TransactionChannel>(
+    paymentMethods[0].value
+  );
   const [loading, setLoading] = useState(false);
+  // Champs pour carte bancaire
+  const [customerName, setCustomerName] = useState("");
+  const [customerSurname, setCustomerSurname] = useState("");
+  const [customerPhoneNumber, setCustomerPhoneNumber] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerCity, setCustomerCity] = useState("");
+  const [customerCountry, setCustomerCountry] = useState("");
+  const [customerState, setCustomerState] = useState("");
+  const [customerZipCode, setCustomerZipCode] = useState("");
 
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const transactionData: TransactionModel = {
+    setCustomerCountry(countryCodes[country]);
+
+    const transactionPaymentData: TransactionPaymentModel = {
       id: createId(),
       amount: parseInt(amount),
       country: country,
@@ -58,10 +88,34 @@ export default function ClientPage() {
       paymentMethod: "",
       status: TransactionStatus.PENDING,
       clientName: name || undefined,
+      customer_name: customerName || undefined,
+      customer_surname: customerSurname || undefined,
+      customer_phone_number: customerPhoneNumber || undefined,
+      customer_email: customerEmail || undefined,
+      customer_address: customerAddress || undefined,
+      customer_city: customerCity || undefined,
+      customer_country: customerCountry || undefined,
+      customer_state: customerState || undefined,
+      customer_zip_code: customerZipCode || undefined,
     };
 
+    const transactionData: TransactionModel = {
+      id: transactionPaymentData.id,
+      amount: transactionPaymentData.amount,
+      country: transactionPaymentData.country,
+      channels: transactionPaymentData.channels,
+      code: "",
+      message: "",
+      currency: "XOF",
+      paymentMethod: "",
+      status: TransactionStatus.PENDING,
+      clientName: name || undefined,
+    };
+
+
+
     // Initialisation du paiement via CinetPay
-    const resPayment = await initPayment(transactionData);
+    const resPayment = await initPayment(transactionPaymentData);
     if (resPayment.code !== "201") {
       toast.error(
         resPayment.description || "Erreur lors de l'initialisation du paiement"
@@ -73,7 +127,7 @@ export default function ClientPage() {
         const res = await createTransaction(transactionData);
         if (!res.isSuccess) {
           toast.error(res.message);
-        }else{
+        } else {
           window.location.href = resPayment.data.payment_url;
         }
       } else {
@@ -87,7 +141,7 @@ export default function ClientPage() {
   return (
     <div className="max-w-lg mx-auto py-10 px-4">
       <div className="bg-red-300 mb-4 h-40 w-72 mx-auto flex items-center shadow-2xl justify-center rounded-lg animate-pulse">
-        <img src="/appLogo.svg" alt="logo"/>
+        <img src="/appLogo.svg" alt="logo" />
       </div>
       <h1 className="text-3xl font-bold mb-8 text-center text-primary">
         Paiement
@@ -150,7 +204,6 @@ export default function ClientPage() {
           </select>
         </div>
 
-
         {/* Moyen de paiement */}
         <div>
           <label className="block mb-2 font-semibold text-primary">
@@ -158,7 +211,9 @@ export default function ClientPage() {
           </label>
           <select
             value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value as TransactionChannel)}
+            onChange={(e) =>
+              setPaymentMethod(e.target.value as TransactionChannel)
+            }
             className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
             {paymentMethods.map((m) => (
@@ -168,6 +223,127 @@ export default function ClientPage() {
             ))}
           </select>
         </div>
+
+        {/* Champs carte bancaire */}
+        {paymentMethod === TransactionChannel.CREDIT_CARD && (
+          <>
+            {/* Nom */}
+            <div>
+              <label className="block mb-2 font-semibold text-primary">
+                Nom du titulaire*
+              </label>
+              <input
+                type="text"
+                value={customerSurname}
+                onChange={(e) => setCustomerSurname(e.target.value)}
+                className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="Nom du titulaire de la carte"
+                required
+              />
+            </div>
+
+            {/* Prénoms */}
+            <div>
+              <label className="block mb-2 font-semibold text-primary">
+                Prénom du titulaire*
+              </label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="Prénom du titulaire de la carte"
+                required
+              />
+            </div>
+
+            {/* Tel */}
+            <div>
+              <label className="block mb-2 font-semibold text-primary">
+                Téléphone*
+              </label>
+              <input
+                type="tel"
+                value={customerPhoneNumber}
+                onChange={(e) => setCustomerPhoneNumber(e.target.value)}
+                className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="Numéro de téléphone"
+                required
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block mb-2 font-semibold text-primary">
+                Email*
+              </label>
+              <input
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="Adresse email"
+                required
+              />
+            </div>
+
+            {/* Ville */}
+            <div>
+              <label className="block mb-2 font-semibold text-primary">
+                Ville
+              </label>
+              <input
+                type="text"
+                value={customerCity}
+                onChange={(e) => setCustomerCity(e.target.value)}
+                className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="Ville du client"
+              />
+            </div>
+
+            {/* Adresse complète */}
+            <div>
+              <label className="block mb-2 font-semibold text-primary">
+                Adresse
+              </label>
+              <input
+                type="text"
+                value={customerAddress}
+                onChange={(e) => setCustomerAddress(e.target.value)}
+                className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="Adresse du client"
+              />
+            </div>
+
+            {/* État / Région */}
+            <div>
+              <label className="block mb-2 font-semibold text-primary">
+                État / Région
+              </label>
+              <input
+                type="text"
+                value={customerState}
+                onChange={(e) => setCustomerState(e.target.value)}
+                className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="État ou région du client"
+              />
+            </div>
+
+            {/* Code postal */}
+            <div>
+              <label className="block mb-2 font-semibold text-primary">
+                Code postal
+              </label>
+              <input
+                type="text"
+                value={customerZipCode}
+                onChange={(e) => setCustomerZipCode(e.target.value)}
+                className="w-full border border-primary rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                placeholder="Code postal du client"
+              />
+            </div>
+          </>
+        )}
 
         {/* Nom complet */}
         <div>
@@ -182,8 +358,7 @@ export default function ClientPage() {
             placeholder="Nom et prénom du client"
           />
         </div>
-        
-        
+
         <button
           type="submit"
           className="w-full bg-primary text-white py-3 rounded-lg font-semibold cursor-pointer hover:bg-primary/80 transition"
@@ -197,7 +372,7 @@ export default function ClientPage() {
         <button
           type="button"
           className="text-primary cursor-pointer underline font-semibold hover:text-orange-600 transition"
-          onClick={() => window.open('/conditions', '_blank')}
+          onClick={() => window.open("/conditions", "_blank")}
         >
           {"Conditions d'utilisation"}
         </button>
