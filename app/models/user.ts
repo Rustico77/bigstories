@@ -1,6 +1,7 @@
 import { UserRole } from "@prisma/client";
 
 export interface UserModel {
+  id?: string;
   email: string;
   role: UserRole;
   password: string; // hashé avec bcrypt

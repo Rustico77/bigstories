@@ -14,9 +14,12 @@ import { checkPayment } from "@/app/actions/cinetPay";
 import { updateTransaction } from "@/app/actions/transaction";
 import CreateUserModal from "@/app/components/modals/createUserModal";
 import { useAdmin } from "@/hooks/useAdmin";
-import { resetUserPassword } from "@/app/actions/user";
+import { deleteUser, resetUserPassword } from "@/app/actions/user";
 import { toast } from "sonner";
 import ShowPasswordModal from "@/app/components/modals/showPasswordModal";
+import ConfirmDeleteUserModal from "@/app/components/modals/ConfirmDeleteUserModal";
+import UpdateUserModal from "@/app/components/modals/updateUserModal";
+import { UserModel } from "@/app/models/user";
 
 
 function formatXOF(amount: number) {
@@ -31,6 +34,9 @@ export default function AdminPage() {
   const [customEnd, setCustomEnd] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [openPassword, setOpenPassword] = useState(false);
+  const [openDeleteUser, setDeleteUser] = useState(false);
+  const [openUpdateUser, setUpdateUser] = useState(false);
+  const [currentAdmin, setCurrentAdmin] = useState<UserModel>();
   const route = useRouter();
   const { user, loading } = useCurrentUser();
   const { transactions, loadTransactions } =
@@ -195,6 +201,17 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteUser = async (id: string) => {
+    const res = await deleteUser(id);
+    if (res.isSuccess) {
+      toast.success(res.message);
+      loadAdmins();
+      setDeleteUser(false);
+    } else {
+      toast.error(res.message);
+    }
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       route.push("/login");
@@ -243,12 +260,14 @@ export default function AdminPage() {
           >
             Statistiques par pays
           </TabsTrigger>
-          <TabsTrigger
+          {user?.role === "ADMIN" && (
+            <TabsTrigger
             value="settings"
             className="data-[state=active]:bg-primary data-[state=active]:text-white text-primary px-10 py-5 rounded-lg font-semibold transition-all cursor-pointer"
           >
             Paramètres
           </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Transactions */}
@@ -524,7 +543,8 @@ export default function AdminPage() {
         </TabsContent>
 
         {/* Paramètres */}
-        <TabsContent value="settings">
+        {user?.role === "ADMIN" && (
+          <TabsContent value="settings">
           <div className="mb-8">
             <div className="mt-6 mb-4 flex justify-between">
               <h2 className="text-2xl font-bold text-primary mb-4">
@@ -572,9 +592,17 @@ export default function AdminPage() {
                         : ""}
                     </td>
                     <td className="py-2 px-4 flex gap-2">
+                      {/* Show Delete User Modal */}
+                      <ConfirmDeleteUserModal open={openDeleteUser} setOpen={setDeleteUser} email={admin.email} onConfirm={() => handleDeleteUser(admin.id)}/>
+                      
+                      {/* Show Update User Modal */}
+                      <UpdateUserModal open={openUpdateUser} setOpen={setUpdateUser} user={currentAdmin} actions={() => loadAdmins()}/> 
+
+                      {/* Modifier */}
                       <button
                         title="Modifier"
-                        className="p-2 rounded bg-primary/10 hover:bg-primary/20 text-primary"
+                        className="p-2 rounded bg-primary/10 hover:bg-primary/20 text-primary cursor-pointer"
+                        onClick={() => {setUpdateUser(true); setCurrentAdmin(admin);}}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -588,9 +616,12 @@ export default function AdminPage() {
                           />
                         </svg>
                       </button>
+
+                      {/* Supprimer */}
                       <button
                         title="Supprimer"
-                        className="p-2 rounded bg-red-100 hover:bg-red-200 text-red-600"
+                        className="p-2 rounded bg-red-100 hover:bg-red-200 text-red-600 cursor-pointer"
+                        onClick={() => setDeleteUser(true)}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -604,10 +635,12 @@ export default function AdminPage() {
                           />
                         </svg>
                       </button>
+
+                      {/* Reset Password */}
                       <button
                         onClick={() => handleResetPassword(admin.id)}
                         title="ResetPassword"
-                        className="p-2 rounded bg-red-100 hover:bg-red-200 text-red-600"
+                        className="p-2 rounded bg-red-100 hover:bg-red-200 text-red-600 cursor-pointer"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -628,6 +661,8 @@ export default function AdminPage() {
             </table>
           </div>
         </TabsContent>
+        )}
+      
       </Tabs>
     </div>
   );

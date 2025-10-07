@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { set, useForm } from "react-hook-form";
-
+import { useForm } from "react-hook-form";
 import {
   Dialog,
   DialogContent,
@@ -19,24 +18,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { create } from "domain";
-import { createUser, updateUser } from "@/app/actions/user";
-import { UserRole } from "@prisma/client";
+import { UserRole, User } from "@prisma/client";
 import { toast } from "sonner";
+import { updateUser } from "@/app/actions/user"; // ← à adapter selon ton chemin réel
 import { UserModel } from "@/app/models/user";
 
 type FormData = {
+  email: string;
   role: UserRole;
 };
 
-interface UpdateUserModalProps {
-  id: string;
-  user: UserModel;
+type UpdateUserModalProps = {
+  user?: UserModel;
   actions: () => Promise<void>;
-}
+  open: boolean;
+  setOpen: (open: boolean) => void;
+};
 
-export default function CreateUserModal({actions, user, id} : UpdateUserModalProps) {
-  const [open, setOpen] = useState(false);
+export default function UpdateUserModal({ user, actions, open, setOpen }: UpdateUserModalProps) {
 
   const {
     register,
@@ -44,56 +43,58 @@ export default function CreateUserModal({actions, user, id} : UpdateUserModalPro
     setValue,
     reset,
     formState: { errors },
-  } = useForm<FormData>();
+  } = useForm<FormData>({
+    defaultValues: {
+      email: user?.email,
+      role: user?.role,
+    },
+  });
 
   const onSubmit = async (data: FormData) => {
-    
-    user.role = data.role;
-
-    const res = await updateUser(id, user);
+    console.log("User avant:", user);
+    const userRes = user ? { ...user } : {} as UserModel;
+    userRes.role = data.role;
+    const res = await updateUser(user!.id!, userRes);
 
     if (res.isSuccess) {
-      toast.success(res.message);
+      toast.success("Utilisateur mis à jour avec succès !");
+      console.log("User après:", userRes);
       actions();
       setOpen(false);
       reset();
     } else {
-      toast.error(res.message);
+      toast.error(res.message || "Une erreur est survenue");
     }
   };
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="px-5 py-2 rounded-lg bg-primary text-white font-bold cursor-pointer"
-      >
-        Créer un nouvel utilisateur
-      </button>
-
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Mise à jour</DialogTitle>
+            <DialogTitle>Modifier l’utilisateur</DialogTitle>
           </DialogHeader>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Champ Email */}
+            {/* Champ Email (non modifiable) */}
             <div>
               <Input
                 type="email"
-                hidden
-                placeholder="Email"
-                value={user.email}
+                value={user?.email}
+                readOnly
+                className="bg-gray-100 text-gray-600 cursor-not-allowed"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                L’email ne peut pas être modifié.
+              </p>
             </div>
 
             {/* Champ Rôle */}
             <div>
               <Select
-                required
+                defaultValue={user?.role}
                 onValueChange={(value) =>
-                  setValue("role", value as "ADMIN" | "USER", {
+                  setValue("role", value as UserRole, {
                     shouldValidate: true,
                   })
                 }
@@ -107,24 +108,27 @@ export default function CreateUserModal({actions, user, id} : UpdateUserModalPro
                 </SelectContent>
               </Select>
               {errors.role && (
-                <p className="text-sm text-red-500">Rôle requis</p>
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.role.message}
+                </p>
               )}
             </div>
 
             {/* Boutons */}
-            <DialogFooter>
-              <Button className="cursor-pointer" type="submit">
-                Enregistrer
-              </Button>
+            <DialogFooter className="flex justify-end space-x-2">
               <Button
-                className="cursor-pointer"
+              className="cursor-pointer"
                 variant="outline"
+                type="button"
                 onClick={() => {
                   setOpen(false);
                   reset();
                 }}
               >
                 Annuler
+              </Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 cursor-pointer">
+                Enregistrer
               </Button>
             </DialogFooter>
           </form>

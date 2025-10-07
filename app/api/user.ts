@@ -7,7 +7,9 @@ export default class User {
   // Récupérer toutes les utilisateurs
   static async getAll() {
     try {
-      const users = await prisma.user.findMany();
+      const users = await prisma.user.findMany({
+        orderBy: { createdAt: "asc" },
+      });
       return { message: "", data: users };
     } catch (error) {
       return { message: "Erreur lors de la récupération des personnes", data: [] };
@@ -81,6 +83,24 @@ export default class User {
       return { message: `Le mot de passe de ${user.email} a été réinitialisé avec succès.`, isSuccess: true};
     } catch (error) {
       return { message: "Erreur lors de la création", isSuccess: false };
+    }
+  }
+
+
+  // supprimer un utilisateur
+  static async delete(id: string) {
+    try {
+      const user = await prisma.user.findUnique({ where: { id } });
+      if(!user) {
+        return { message: "Cet Utilisateur n'existe plus.", isSuccess: false };
+      }
+
+      await prisma.user.delete({
+        where: { id }
+      });
+      return { message: "Utilisateur supprimé avec succès", isSuccess: true};
+    } catch (error) {
+      return { message: "Erreur lors de la suppression de l'utilisateur", isSuccess: false };
     }
   }
 }

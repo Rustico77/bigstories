@@ -24,3 +24,7 @@ export async function getAllUser() {
 export async function getSingleUser(id: string) {
   return await User.getSingle(id);
 }
+
+export async function deleteUser(id: string) {
+  return await User.delete(id);
+}

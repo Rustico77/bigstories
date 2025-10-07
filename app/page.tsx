@@ -192,6 +192,16 @@ export default function ClientPage() {
           {loading ? "Paiement en cours..." : "Payer"}
         </button>
       </form>
+      {/* Bouton Condition d'utilisation */}
+      <div className="flex justify-center mt-8">
+        <button
+          type="button"
+          className="text-primary cursor-pointer underline font-semibold hover:text-orange-600 transition"
+          onClick={() => window.open('/conditions', '_blank')}
+        >
+          {"Conditions d'utilisation"}
+        </button>
+      </div>
     </div>
   );
 }

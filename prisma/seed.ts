@@ -12,6 +12,7 @@ async function main() {
     create: {
       email: "admin@bigstories.com",
       password,
+      role: "ADMIN"
     },
   });
 
